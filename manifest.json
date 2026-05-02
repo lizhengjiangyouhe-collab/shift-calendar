@@ -1,0 +1,17 @@
+{
+  "name": "排班与婚礼档期管理",
+  "short_name": "排班日历",
+  "description": "管理你的排班和婚礼档期",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f1f5f9",
+  "theme_color": "#3b82f6",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=a%20simple%20clean%20calendar%20icon%20with%20blue%20and%20green%20colors%20for%20wedding%20schedule%20app&image_size=square",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

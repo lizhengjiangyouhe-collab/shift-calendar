@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="排班日历">
+    <meta name="theme-color" content="#3b82f6">
+    <title>排班与婚礼档期管理</title>
+    <link rel="manifest" href="./manifest.json">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * { -webkit-tap-highlight-color: transparent; }
+        .day-cell { aspect-ratio: 1; min-height: 48px; }
+    </style>
+</head>
+<body class="bg-slate-50 text-gray-900 antialiased">
+    <div class="max-w-md mx-auto min-h-screen relative">
+        
+        <header class="sticky top-0 z-50 bg-white/90 backdrop-blur-md px-5 flex items-center justify-between py-4 shadow-sm">
+            <h1 class="text-lg font-semibold text-gray-900">排班日历</h1>
+            <button id="todayBtn" class="px-4 py-2 rounded-full bg-blue-500 text-white text-sm font-medium active:bg-blue-600 transition-colors">
+                今天
+            </button>
+        </header>
+
+        <main class="px-4 py-4 pb-6 space-y-4">
+
+            <section class="bg-white rounded-2xl shadow-sm p-5">
+                <div class="flex items-center justify-between mb-5">
+                    <h2 id="monthTitle" class="text-xl font-semibold text-gray-900"></h2>
+                    <div class="flex gap-2">
+                        <button id="prevMonth" class="w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors text-xl font-bold">‹</button>
+                        <button id="nextMonth" class="w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors text-xl font-bold">›</button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-7 gap-1 mb-2">
+                    <div class="text-center text-xs font-medium text-slate-400 py-2">日</div>
+                    <div class="text-center text-xs font-medium text-slate-400 py-2">一</div>
+                    <div class="text-center text-xs font-medium text-slate-400 py-2">二</div>
+                    <div class="text-center text-xs font-medium text-slate-400 py-2">三</div>
+                    <div class="text-center text-xs font-medium text-slate-400 py-2">四</div>
+                    <div class="text-center text-xs font-medium text-slate-400 py-2">五</div>
+                    <div class="text-center text-xs font-medium text-slate-400 py-2">六</div>
+                </div>
+
+                <div id="daysGrid" class="grid grid-cols-7 gap-1"></div>
+            </section>
+
+            <section class="bg-white rounded-2xl shadow-sm px-4 py-3">
+                <div class="flex flex-wrap justify-center gap-4">
+                    <div class="flex items-center gap-2 text-sm text-slate-600">
+                        <span class="w-4 h-4 rounded bg-blue-500"></span> 上班
+                    </div>
+                    <div class="flex items-center gap-2 text-sm text-slate-600">
+                        <span class="w-4 h-4 rounded bg-emerald-300"></span> 休息
+                    </div>
+                    <div class="flex items-center gap-2 text-sm text-slate-600">
+                        <span class="w-4 h-4 rounded bg-pink-400"></span> 婚礼
+                    </div>
+                    <div class="flex items-center gap-2 text-sm text-slate-600">
+                        <span class="w-4 h-4 rounded bg-red-600"></span> 冲突
+                    </div>
+                    <div class="flex items-center gap-2 text-sm text-slate-600">
+                        <span class="w-4 h-4 rounded bg-[#F37021]"></span> 已替班
+                    </div>
+                </div>
+            </section>
+
+            <section id="actionPanel" class="bg-white rounded-2xl shadow-sm p-5">
+                <h3 class="text-sm font-semibold text-slate-500 mb-3">设置选中日期</h3>
+                <div id="actionContent">
+                    <p class="text-center text-slate-400 py-6">请点击日历中的某个日期</p>
+                </div>
+            </section>
+
+            <section class="bg-white rounded-2xl shadow-sm p-5">
+                <button id="openScheduleModalBtn" class="w-full py-4 rounded-xl bg-blue-500 text-white text-base font-semibold hover:bg-blue-600 active:bg-blue-700 transition-colors">
+                    自动排班 · 上2休2
+                </button>
+            </section>
+
+        </main>
+
+    </div>
+
+    <div id="scheduleModal" class="fixed inset-0 z-[100] hidden items-end justify-center bg-black/40" onclick="if(event.target===this)closeScheduleModal()">
+        <div class="bg-white rounded-t-2xl w-full max-w-[430px] overflow-y-auto">
+            <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+                <h3 class="text-lg font-semibold text-slate-900">选择起始类型</h3>
+                <button onclick="closeScheduleModal()" class="w-9 h-9 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-700 transition-colors text-lg">✕</button>
+            </div>
+            <div class="p-5">
+                <div class="grid grid-cols-2 gap-3 mb-5">
+                    <button class="modal-schedule-btn px-4 py-4 rounded-xl border-2 border-slate-200 text-base font-medium text-slate-700 hover:border-blue-400 transition-colors" data-type="work1">上班第一天</button>
+                    <button class="modal-schedule-btn px-4 py-4 rounded-xl border-2 border-slate-200 text-base font-medium text-slate-700 hover:border-blue-400 transition-colors" data-type="work2">上班第二天</button>
+                    <button class="modal-schedule-btn px-4 py-4 rounded-xl border-2 border-slate-200 text-base font-medium text-slate-700 hover:border-blue-400 transition-colors" data-type="rest1">休息第一天</button>
+                    <button class="modal-schedule-btn px-4 py-4 rounded-xl border-2 border-slate-200 text-base font-medium text-slate-700 hover:border-blue-400 transition-colors" data-type="rest2">休息第二天</button>
+                </div>
+                <button id="applyScheduleBtn" disabled class="w-full py-4 rounded-xl bg-slate-200 text-slate-400 text-base font-semibold cursor-not-allowed transition-all">
+                    应用到未来365天
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            let currentYear, currentMonth, selectedDate, selectedScheduleType;
+            let calendarData = {};
+
+            const STORAGE_KEY = 'shift_wedding_calendar_v1';
+
+            function saveData() {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(calendarData));
+            }
+
+            function loadData() {
+                try {
+                    const data = localStorage.getItem(STORAGE_KEY);
+                    if (data) calendarData = JSON.parse(data);
+                } catch (e) {
+                    calendarData = {};
+                }
+            }
+
+            function dateKey(year, month, day) {
+                return `${year}-${month + 1}-${day}`;
+            }
+
+            function getDateStatus(dateStr) {
+                return calendarData[dateStr] || { type: null, wedding: false, substitute: false };
+            }
+
+            function setDateStatus(dateStr, status) {
+                calendarData[dateStr] = status;
+                saveData();
+            }
+
+            function firstDayOfMonth(year, month) {
+                return new Date(year, month, 1).getDay();
+            }
+
+            function daysInMonth(year, month) {
+                return new Date(year, month + 1, 0).getDate();
+            }
+
+            function getMonthName(month) {
+                const months = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
+                return months[month];
+            }
+
+            function isToday(year, month, day) {
+                const today = new Date();
+                return today.getFullYear() === year && today.getMonth() === month && today.getDate() === day;
+            }
+
+            function renderCalendar() {
+                const grid = document.getElementById('daysGrid');
+                grid.innerHTML = '';
+
+                const firstDay = firstDayOfMonth(currentYear, currentMonth);
+                const totalDays = daysInMonth(currentYear, currentMonth);
+
+                document.getElementById('monthTitle').textContent = `${currentYear}年 ${getMonthName(currentMonth)}`;
+
+                for (let i = 0; i < firstDay; i++) {
+                    const empty = document.createElement('div');
+                    empty.className = 'day-cell';
+                    grid.appendChild(empty);
+                }
+
+                for (let day = 1; day <= totalDays; day++) {
+                    const dk = dateKey(currentYear, currentMonth, day);
+                    const status = getDateStatus(dk);
+                    const cell = document.createElement('button');
+                    cell.className = 'day-cell rounded-xl text-sm font-medium flex items-center justify-center transition-all duration-150 relative';
+
+                    if (status.wedding && status.type === 'work' && status.substitute) {
+                        cell.classList.add('bg-[#F37021]', 'text-white', 'hover:opacity-90');
+                    } else if (status.wedding && status.type === 'work') {
+                        cell.classList.add('bg-red-600', 'text-white', 'hover:opacity-90');
+                    } else if (status.wedding) {
+                        cell.classList.add('bg-pink-400', 'text-white', 'hover:opacity-90');
+                    } else if (status.type === 'work') {
+                        cell.classList.add('bg-blue-500', 'text-white', 'hover:opacity-90');
+                    } else if (status.type === 'rest') {
+                        cell.classList.add('bg-emerald-300', 'text-emerald-900', 'hover:opacity-90');
+                    } else {
+                        cell.classList.add('bg-slate-50', 'text-slate-700', 'hover:bg-slate-100');
+                    }
+
+                    if (isToday(currentYear, currentMonth, day)) {
+                        cell.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2');
+                    }
+
+                    if (dk === selectedDate) {
+                        cell.classList.add('ring-2', 'ring-slate-800', 'ring-offset-1');
+                    }
+
+                    cell.textContent = day;
+                    cell.addEventListener('click', (function(dateKeyVal) {
+                        return function() { selectDate(dateKeyVal); };
+                    })(dk));
+                    grid.appendChild(cell);
+                }
+
+                renderActionPanel();
+            }
+
+            function selectDate(dk) {
+                selectedDate = dk;
+                renderCalendar();
+            }
+
+            function renderActionPanel() {
+                const container = document.getElementById('actionContent');
+                if (!selectedDate) {
+                    container.innerHTML = '<p class="text-center text-slate-400 py-6">请点击日历中的某个日期</p>';
+                    return;
+                }
+
+                const parts = selectedDate.split('-').map(Number);
+                const label = `${parts[0]}年${parts[1]}月${parts[2]}日`;
+                const status = getDateStatus(selectedDate);
+
+                let html = `<p class="text-center text-slate-500 mb-4">选中：<span class="font-semibold text-slate-900">${label}</span></p>`;
+                html += '<div class="grid grid-cols-2 gap-3">';
+
+                const isWork = status.type === 'work';
+                const isRest = status.type === 'rest';
+
+                html += `<button id="setWorkBtn" class="px-4 py-3 rounded-xl bg-blue-500 text-white text-sm font-medium hover:bg-blue-600 active:bg-blue-700 transition-colors${isWork ? ' opacity-60' : ''}">上班</button>`;
+                html += `<button id="setRestBtn" class="px-4 py-3 rounded-xl bg-emerald-300 text-emerald-900 text-sm font-medium hover:bg-emerald-400 active:bg-emerald-500 transition-colors${isRest ? ' opacity-60' : ''}">休息</button>`;
+                html += `<button id="toggleWeddingBtn" class="px-4 py-3 rounded-xl bg-pink-400 text-white text-sm font-medium hover:bg-pink-500 active:bg-pink-600 transition-colors">${status.wedding ? '取消婚礼' : '标记婚礼'}</button>`;
+                html += `<button id="clearBtn" class="px-4 py-3 rounded-xl bg-slate-100 text-slate-700 text-sm font-medium hover:bg-slate-200 active:bg-slate-300 transition-colors">清除</button>`;
+
+                html += '</div>';
+
+                if (status.wedding && status.type === 'work') {
+                    html += '<div class="mt-4">';
+                    html += `<button id="toggleSubstituteBtn" class="w-full px-4 py-3 rounded-xl ${status.substitute ? 'bg-[#F37021] text-white' : 'bg-slate-100 text-slate-700'} text-sm font-medium hover:opacity-90 transition-colors">${status.substitute ? '✓ 已找到替班' : '找到替班？'} </button>`;
+                    html += '</div>';
+                }
+
+                container.innerHTML = html;
+
+                document.getElementById('setWorkBtn').addEventListener('click', function() { setShift('work'); });
+                document.getElementById('setRestBtn').addEventListener('click', function() { setShift('rest'); });
+                document.getElementById('toggleWeddingBtn').addEventListener('click', toggleWedding);
+                document.getElementById('clearBtn').addEventListener('click', clearDate);
+
+                const toggleSubBtn = document.getElementById('toggleSubstituteBtn');
+                if (toggleSubBtn) {
+                    toggleSubBtn.addEventListener('click', toggleSubstitute);
+                }
+            }
+
+            function setShift(type) {
+                if (!selectedDate) return;
+                const current = getDateStatus(selectedDate);
+                setDateStatus(selectedDate, { ...current, type: type, substitute: false });
+                renderCalendar();
+            }
+
+            function toggleWedding() {
+                if (!selectedDate) return;
+                const current = getDateStatus(selectedDate);
+                setDateStatus(selectedDate, { ...current, wedding: !current.wedding, substitute: false });
+                renderCalendar();
+            }
+
+            function toggleSubstitute() {
+                if (!selectedDate) return;
+                const current = getDateStatus(selectedDate);
+                setDateStatus(selectedDate, { ...current, substitute: !current.substitute });
+                renderCalendar();
+            }
+
+            function clearDate() {
+                if (!selectedDate) return;
+                delete calendarData[selectedDate];
+                saveData();
+                renderCalendar();
+            }
+
+            function openScheduleModal() {
+                selectedScheduleType = null;
+                document.querySelectorAll('.modal-schedule-btn').forEach(function(b) {
+                    b.classList.remove('border-blue-500', 'bg-blue-50', 'text-blue-700');
+                    b.classList.add('border-slate-200', 'text-slate-700');
+                });
+                updateApplyScheduleBtn();
+                document.getElementById('scheduleModal').classList.remove('hidden');
+                document.getElementById('scheduleModal').classList.add('flex');
+            }
+
+            function closeScheduleModal() {
+                document.getElementById('scheduleModal').classList.add('hidden');
+                document.getElementById('scheduleModal').classList.remove('flex');
+            }
+
+            function updateApplyScheduleBtn() {
+                const btn = document.getElementById('applyScheduleBtn');
+                if (selectedDate && selectedScheduleType) {
+                    btn.disabled = false;
+                    btn.classList.remove('bg-slate-200', 'text-slate-400', 'cursor-not-allowed');
+                    btn.classList.add('bg-blue-500', 'text-white', 'hover:bg-blue-600', 'cursor-pointer');
+                } else {
+                    btn.disabled = true;
+                    btn.classList.add('bg-slate-200', 'text-slate-400', 'cursor-not-allowed');
+                    btn.classList.remove('bg-blue-500', 'text-white', 'hover:bg-blue-600', 'cursor-pointer');
+                }
+            }
+
+            function applyAutoSchedule() {
+                if (!selectedDate || !selectedScheduleType) return;
+
+                const parts = selectedDate.split('-').map(Number);
+                const start = new Date(parts[0], parts[1] - 1, parts[2]);
+                const end = new Date(start);
+                end.setDate(end.getDate() + 365);
+
+                const order = ['work1', 'work2', 'rest1', 'rest2'];
+                let idx = order.indexOf(selectedScheduleType);
+                let current = new Date(start);
+
+                while (current <= end) {
+                    const dk = dateKey(current.getFullYear(), current.getMonth(), current.getDate());
+                    const type = order[idx];
+                    const shiftType = (type === 'work1' || type === 'work2') ? 'work' : 'rest';
+                    const existing = getDateStatus(dk);
+                    setDateStatus(dk, { ...existing, type: shiftType, substitute: false });
+
+                    current.setDate(current.getDate() + 1);
+                    idx = (idx + 1) % 4;
+                }
+
+                closeScheduleModal();
+                renderCalendar();
+            }
+
+            function goToPrevMonth() {
+                currentMonth--;
+                if (currentMonth < 0) {
+                    currentMonth = 11;
+                    currentYear--;
+                }
+                renderCalendar();
+            }
+
+            function goToNextMonth() {
+                currentMonth++;
+                if (currentMonth > 11) {
+                    currentMonth = 0;
+                    currentYear++;
+                }
+                renderCalendar();
+            }
+
+            function goToToday() {
+                const today = new Date();
+                currentYear = today.getFullYear();
+                currentMonth = today.getMonth();
+                selectedDate = dateKey(currentYear, currentMonth, today.getDate());
+                renderCalendar();
+            }
+
+            function init() {
+                loadData();
+
+                document.getElementById('prevMonth').addEventListener('click', goToPrevMonth);
+                document.getElementById('nextMonth').addEventListener('click', goToNextMonth);
+                document.getElementById('todayBtn').addEventListener('click', goToToday);
+                document.getElementById('openScheduleModalBtn').addEventListener('click', openScheduleModal);
+                document.getElementById('applyScheduleBtn').addEventListener('click', applyAutoSchedule);
+
+                document.querySelectorAll('.modal-schedule-btn').forEach(function(btn) {
+                    btn.addEventListener('click', function() {
+                        document.querySelectorAll('.modal-schedule-btn').forEach(function(b) {
+                            b.classList.remove('border-blue-500', 'bg-blue-50', 'text-blue-700');
+                            b.classList.add('border-slate-200', 'text-slate-700');
+                        });
+                        this.classList.remove('border-slate-200', 'text-slate-700');
+                        this.classList.add('border-blue-500', 'bg-blue-50', 'text-blue-700');
+                        selectedScheduleType = this.dataset.type;
+                        updateApplyScheduleBtn();
+                    });
+                });
+
+                goToToday();
+            }
+
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('./sw.js')
+                        .then(registration => console.log('SW registered'))
+                        .catch(error => console.log('SW registration failed'));
+                });
+            }
+
+            document.addEventListener('DOMContentLoaded', init);
+        })();
+    </script>
+</body>
+</html>
