@@ -86,11 +86,11 @@
 
     </div>
 
-    <div id="scheduleModal" class="fixed inset-0 z-[100] hidden items-end justify-center bg-black/40" onclick="if(event.target===this)closeScheduleModal()">
+    <div id="scheduleModal" class="fixed inset-0 z-[100] hidden items-end justify-center bg-black/40">
         <div class="bg-white rounded-t-2xl w-full max-w-[430px] overflow-y-auto">
             <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100">
                 <h3 class="text-lg font-semibold text-slate-900">选择起始类型</h3>
-                <button onclick="closeScheduleModal()" class="w-9 h-9 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-700 transition-colors text-lg">✕</button>
+                <button id="closeScheduleModalBtn" class="w-9 h-9 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-700 transition-colors text-lg">✕</button>
             </div>
             <div class="p-5">
                 <div class="grid grid-cols-2 gap-3 mb-5">
@@ -102,6 +102,42 @@
                 <button id="applyScheduleBtn" disabled class="w-full py-4 rounded-xl bg-slate-200 text-slate-400 text-base font-semibold cursor-not-allowed transition-all">
                     应用到未来365天
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="weddingModal" class="fixed inset-0 z-[100] hidden items-end justify-center bg-black/40">
+        <div class="bg-white rounded-t-2xl w-full max-w-[430px] overflow-y-auto">
+            <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+                <h3 class="text-lg font-semibold text-slate-900">婚礼详情</h3>
+                <button id="closeWeddingModalBtn" class="w-9 h-9 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-700 transition-colors text-lg">✕</button>
+            </div>
+            <div class="p-5 space-y-5">
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-3">婚礼来源</label>
+                    <div class="space-y-2">
+                        <label class="flex items-center p-4 bg-slate-50 rounded-xl cursor-pointer hover:bg-slate-100 transition-colors">
+                            <input type="radio" name="weddingSource" value="秀太" class="w-5 h-5 text-blue-600 mr-3">
+                            <span class="text-sm font-medium text-slate-800">秀太</span>
+                        </label>
+                        <label class="flex items-center p-4 bg-slate-50 rounded-xl cursor-pointer hover:bg-slate-100 transition-colors">
+                            <input type="radio" name="weddingSource" value="喜事汇" class="w-5 h-5 text-blue-600 mr-3">
+                            <span class="text-sm font-medium text-slate-800">喜事汇</span>
+                        </label>
+                        <label class="flex items-center p-4 bg-slate-50 rounded-xl cursor-pointer hover:bg-slate-100 transition-colors">
+                            <input type="radio" name="weddingSource" value="其他" class="w-5 h-5 text-blue-600 mr-3">
+                            <span class="text-sm font-medium text-slate-800">其他</span>
+                        </label>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-3">备注</label>
+                    <textarea id="weddingNotes" rows="4" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors" placeholder="输入备注信息..."></textarea>
+                </div>
+                <div class="flex gap-3 pt-2 border-t border-slate-100">
+                    <button id="removeWeddingBtn" class="flex-1 py-4 rounded-xl bg-red-50 text-red-600 text-base font-semibold hover:bg-red-100 transition-colors">移除婚礼</button>
+                    <button id="saveWeddingBtn" class="flex-1 py-4 rounded-xl bg-blue-500 text-white text-base font-semibold hover:bg-blue-600 active:bg-blue-700 transition-colors">保存</button>
+                </div>
             </div>
         </div>
     </div>
@@ -176,7 +212,7 @@
                     const dk = dateKey(currentYear, currentMonth, day);
                     const status = getDateStatus(dk);
                     const cell = document.createElement('button');
-                    cell.className = 'day-cell rounded-xl text-sm font-medium flex items-center justify-center transition-all duration-150 relative';
+                    cell.className = 'day-cell rounded-xl text-sm font-medium flex flex-col items-center justify-center transition-all duration-150 relative';
 
                     if (status.wedding && status.type === 'work' && status.substitute) {
                         cell.classList.add('bg-[#F37021]', 'text-white', 'hover:opacity-90');
@@ -200,7 +236,17 @@
                         cell.classList.add('ring-2', 'ring-slate-800', 'ring-offset-1');
                     }
 
-                    cell.textContent = day;
+                    const dayText = document.createElement('span');
+                    dayText.textContent = day;
+                    cell.appendChild(dayText);
+
+                    if (status.wedding && status.weddingSource) {
+                        const sourceTag = document.createElement('span');
+                        sourceTag.className = 'text-[9px] mt-0.5 opacity-80 font-medium';
+                        sourceTag.textContent = status.weddingSource;
+                        cell.appendChild(sourceTag);
+                    }
+
                     cell.addEventListener('click', (function(dateKeyVal) {
                         return function() { selectDate(dateKeyVal); };
                     })(dk));
@@ -234,7 +280,7 @@
 
                 html += `<button id="setWorkBtn" class="px-4 py-3 rounded-xl bg-blue-500 text-white text-sm font-medium hover:bg-blue-600 active:bg-blue-700 transition-colors${isWork ? ' opacity-60' : ''}">上班</button>`;
                 html += `<button id="setRestBtn" class="px-4 py-3 rounded-xl bg-emerald-300 text-emerald-900 text-sm font-medium hover:bg-emerald-400 active:bg-emerald-500 transition-colors${isRest ? ' opacity-60' : ''}">休息</button>`;
-                html += `<button id="toggleWeddingBtn" class="px-4 py-3 rounded-xl bg-pink-400 text-white text-sm font-medium hover:bg-pink-500 active:bg-pink-600 transition-colors">${status.wedding ? '取消婚礼' : '标记婚礼'}</button>`;
+                html += `<button id="toggleWeddingBtn" class="px-4 py-3 rounded-xl bg-pink-400 text-white text-sm font-medium hover:bg-pink-500 active:bg-pink-600 transition-colors">${status.wedding ? '编辑婚礼' : '标记婚礼'}</button>`;
                 html += `<button id="clearBtn" class="px-4 py-3 rounded-xl bg-slate-100 text-slate-700 text-sm font-medium hover:bg-slate-200 active:bg-slate-300 transition-colors">清除</button>`;
 
                 html += '</div>';
@@ -249,7 +295,7 @@
 
                 document.getElementById('setWorkBtn').addEventListener('click', function() { setShift('work'); });
                 document.getElementById('setRestBtn').addEventListener('click', function() { setShift('rest'); });
-                document.getElementById('toggleWeddingBtn').addEventListener('click', toggleWedding);
+                document.getElementById('toggleWeddingBtn').addEventListener('click', openWeddingModal);
                 document.getElementById('clearBtn').addEventListener('click', clearDate);
 
                 const toggleSubBtn = document.getElementById('toggleSubstituteBtn');
@@ -265,10 +311,55 @@
                 renderCalendar();
             }
 
-            function toggleWedding() {
+            function openWeddingModal() {
                 if (!selectedDate) return;
                 const current = getDateStatus(selectedDate);
-                setDateStatus(selectedDate, { ...current, wedding: !current.wedding, substitute: false });
+                
+                // 填充已有数据
+                if (current.weddingSource) {
+                    const radio = document.querySelector(`input[name="weddingSource"][value="${current.weddingSource}"]`);
+                    if (radio) radio.checked = true;
+                }
+                document.getElementById('weddingNotes').value = current.weddingNotes || '';
+                
+                document.getElementById('weddingModal').classList.remove('hidden');
+                document.getElementById('weddingModal').classList.add('flex');
+            }
+
+            function closeWeddingModal() {
+                document.getElementById('weddingModal').classList.add('hidden');
+                document.getElementById('weddingModal').classList.remove('flex');
+            }
+
+            function saveWedding() {
+                if (!selectedDate) return;
+                const current = getDateStatus(selectedDate);
+                const sourceRadio = document.querySelector('input[name="weddingSource"]:checked');
+                
+                setDateStatus(selectedDate, {
+                    ...current,
+                    wedding: true,
+                    weddingSource: sourceRadio ? sourceRadio.value : null,
+                    weddingNotes: document.getElementById('weddingNotes').value,
+                    substitute: false
+                });
+                
+                closeWeddingModal();
+                renderCalendar();
+            }
+
+            function removeWedding() {
+                if (!selectedDate) return;
+                const current = getDateStatus(selectedDate);
+                setDateStatus(selectedDate, {
+                    ...current,
+                    wedding: false,
+                    weddingSource: null,
+                    weddingNotes: null,
+                    substitute: false
+                });
+                
+                closeWeddingModal();
                 renderCalendar();
             }
 
@@ -375,7 +466,12 @@
                 document.getElementById('nextMonth').addEventListener('click', goToNextMonth);
                 document.getElementById('todayBtn').addEventListener('click', goToToday);
                 document.getElementById('openScheduleModalBtn').addEventListener('click', openScheduleModal);
+                document.getElementById('closeScheduleModalBtn').addEventListener('click', closeScheduleModal);
                 document.getElementById('applyScheduleBtn').addEventListener('click', applyAutoSchedule);
+
+                document.getElementById('scheduleModal').addEventListener('click', function(e) {
+                    if (e.target === this) closeScheduleModal();
+                });
 
                 document.querySelectorAll('.modal-schedule-btn').forEach(function(btn) {
                     btn.addEventListener('click', function() {
@@ -388,6 +484,14 @@
                         selectedScheduleType = this.dataset.type;
                         updateApplyScheduleBtn();
                     });
+                });
+
+                document.getElementById('closeWeddingModalBtn').addEventListener('click', closeWeddingModal);
+                document.getElementById('saveWeddingBtn').addEventListener('click', saveWedding);
+                document.getElementById('removeWeddingBtn').addEventListener('click', removeWedding);
+
+                document.getElementById('weddingModal').addEventListener('click', function(e) {
+                    if (e.target === this) closeWeddingModal();
                 });
 
                 goToToday();
