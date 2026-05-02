@@ -1,7 +1,9 @@
-const CACHE_NAME = 'shift-calendar-v2';
+const CACHE_NAME = 'shift-calendar-v3';
 const urlsToCache = [
   './',
-  './index.html'
+  './index.html',
+  './google-calendar.png',
+  './manifest.json'
 ];
 
 // 安装阶段：缓存核心资源

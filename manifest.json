@@ -9,7 +9,7 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=a%20simple%20clean%20calendar%20icon%20with%20blue%20and%20green%20colors%20for%20wedding%20schedule%20app&image_size=square",
+      "src": "./google-calendar.png",
       "sizes": "512x512",
       "type": "image/png"
     }
